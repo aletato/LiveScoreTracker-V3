@@ -16,6 +16,21 @@ This bot connects to the live-score-api service to monitor live sports matches a
 - **Match Statistics**: View summaries of tracked matches and their scores
 - **Desktop Notifications**: Receive desktop notifications (platform-specific)
 
+## Project Structure
+
+The project is organized into three main files, each with a specific responsibility:
+
+- **main.py**: The entry point of the application that handles configuration, setup, and the main execution flow.
+- **tracking.py**: Contains all the tracking-related functionality:
+  - `ScoreCache`: For caching match data to reduce API calls
+  - `LiveScoreAPI`: Handles all interactions with the live-score-api service
+  - `MatchFilter`: Filters matches based on user configuration
+  - `ScoreTracker`: The main class that manages tracking score changes
+- **notification_system.py**: Contains the notification functionality:
+  - `Notifier`: Handles sending notifications when score changes are detected
+
+This modular structure makes the codebase more maintainable and easier to extend.
+
 ## Requirements
 
 - Python 3.9 or higher
