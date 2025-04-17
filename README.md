@@ -125,8 +125,3 @@ When the configured number of points are scored in a tracked match, the bot will
 
 1. Log the score change to the console and log file
 2. Display a desktop notification (if platform-specific packages are installed)
-
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
-
