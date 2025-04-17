@@ -148,7 +148,28 @@ class Notifier:
         home_team = match.get('home_name', match.get('home', 'Home Team'))
         away_team = match.get('away_name', match.get('away', 'Away Team'))
         league = match.get('league_name', match.get('competition_name', 'Unknown League'))
-        sport = match.get('sport_name', match.get('sport', 'Unknown Sport'))
+        # Try multiple possible field names for sport
+        sport = match.get('sport_name', match.get('sport', ''))
+        if not sport:
+            # Try additional fields that might contain sport information
+            sport = match.get('category_name', match.get('category', ''))
+        if not sport:
+            # Check if we can determine sport from league name
+            league_lower = league.lower()
+            if any(s in league_lower for s in ['soccer', 'football', 'premier', 'la liga', 'bundesliga', 'serie a']):
+                sport = 'Soccer'
+            elif any(s in league_lower for s in ['nba', 'basketball', 'ncaa']):
+                sport = 'Basketball'
+            elif any(s in league_lower for s in ['nhl', 'hockey', 'ice']):
+                sport = 'Hockey'
+            elif any(s in league_lower for s in ['tennis', 'atp', 'wta']):
+                sport = 'Tennis'
+            elif any(s in league_lower for s in ['baseball', 'mlb']):
+                sport = 'Baseball'
+            elif any(s in league_lower for s in ['nfl', 'american football']):
+                sport = 'American Football'
+            else:
+                sport = 'Other Sport'  # Better default than "Unknown Sport"
         match_status = match.get('status', 'In Progress')
         
         # Create tabular data for the notification
@@ -191,7 +212,28 @@ class Notifier:
             # Get team names with fallbacks
             home_team = match.get('home_name', match.get('home', 'Home Team'))
             away_team = match.get('away_name', match.get('away', 'Away Team'))
-            sport = match.get('sport_name', match.get('sport', 'Unknown Sport'))
+            # Try multiple possible field names for sport
+            sport = match.get('sport_name', match.get('sport', ''))
+            if not sport:
+                # Try additional fields that might contain sport information
+                sport = match.get('category_name', match.get('category', ''))
+            if not sport:
+                # Check if we can determine sport from league name
+                league_lower = league.lower()
+                if any(s in league_lower for s in ['soccer', 'football', 'premier', 'la liga', 'bundesliga', 'serie a']):
+                    sport = 'Soccer'
+                elif any(s in league_lower for s in ['nba', 'basketball', 'ncaa']):
+                    sport = 'Basketball'
+                elif any(s in league_lower for s in ['nhl', 'hockey', 'ice']):
+                    sport = 'Hockey'
+                elif any(s in league_lower for s in ['tennis', 'atp', 'wta']):
+                    sport = 'Tennis'
+                elif any(s in league_lower for s in ['baseball', 'mlb']):
+                    sport = 'Baseball'
+                elif any(s in league_lower for s in ['nfl', 'american football']):
+                    sport = 'American Football'
+                else:
+                    sport = 'Other Sport'  # Better default than "Unknown Sport"
             league = match.get('league_name', match.get('competition_name', 'Unknown League'))
             
             # Create a compact tabulated format for notifications
@@ -546,7 +588,28 @@ class MatchFilter:
                 home = match.get('home_name', match.get('home', 'Unknown'))
                 away = match.get('away_name', match.get('away', 'Unknown'))
                 league = match.get('league_name', match.get('competition_name', 'Unknown League'))
-                sport = match.get('sport_name', match.get('sport', 'Unknown Sport'))
+                # Try multiple possible field names for sport
+                sport = match.get('sport_name', match.get('sport', ''))
+                if not sport:
+                    # Try additional fields that might contain sport information
+                    sport = match.get('category_name', match.get('category', ''))
+                if not sport:
+                    # Check if we can determine sport from league name
+                    league_lower = league.lower()
+                    if any(s in league_lower for s in ['soccer', 'football', 'premier', 'la liga', 'bundesliga', 'serie a']):
+                        sport = 'Soccer'
+                    elif any(s in league_lower for s in ['nba', 'basketball', 'ncaa']):
+                        sport = 'Basketball'
+                    elif any(s in league_lower for s in ['nhl', 'hockey', 'ice']):
+                        sport = 'Hockey'
+                    elif any(s in league_lower for s in ['tennis', 'atp', 'wta']):
+                        sport = 'Tennis'
+                    elif any(s in league_lower for s in ['baseball', 'mlb']):
+                        sport = 'Baseball'
+                    elif any(s in league_lower for s in ['nfl', 'american football']):
+                        sport = 'American Football'
+                    else:
+                        sport = 'Other Sport'
                 # Extract match time if available
                 match_time = match.get('time', match.get('match_time', ''))
                 # Extract score if available
@@ -607,7 +670,28 @@ class MatchFilter:
         home = match.get('home_name', match.get('home', 'Unknown'))
         away = match.get('away_name', match.get('away', 'Unknown'))
         league = match.get('league_name', match.get('competition_name', 'Unknown League'))
-        sport = match.get('sport_name', match.get('sport', 'Unknown Sport'))
+        # Try multiple possible field names for sport
+        sport = match.get('sport_name', match.get('sport', ''))
+        if not sport:
+            # Try additional fields that might contain sport information
+            sport = match.get('category_name', match.get('category', ''))
+        if not sport:
+            # Check if we can determine sport from league name
+            league_lower = league.lower()
+            if any(s in league_lower for s in ['soccer', 'football', 'premier', 'la liga', 'bundesliga', 'serie a']):
+                sport = 'Soccer'
+            elif any(s in league_lower for s in ['nba', 'basketball', 'ncaa']):
+                sport = 'Basketball'
+            elif any(s in league_lower for s in ['nhl', 'hockey', 'ice']):
+                sport = 'Hockey'
+            elif any(s in league_lower for s in ['tennis', 'atp', 'wta']):
+                sport = 'Tennis'
+            elif any(s in league_lower for s in ['baseball', 'mlb']):
+                sport = 'Baseball'
+            elif any(s in league_lower for s in ['nfl', 'american football']):
+                sport = 'American Football'
+            else:
+                sport = 'Other Sport'
         
         # Extract match time if available
         match_time = match.get('time', match.get('match_time', ''))
@@ -782,7 +866,19 @@ class ScoreTracker:
             if self.config.debug_mode:
                 home_team = match_data.get('home_name', match_data.get('home', 'Home Team'))
                 away_team = match_data.get('away_name', match_data.get('away', 'Away Team'))
-                sport = match_data.get('sport_name', match_data.get('sport', 'Unknown Sport'))
+                # Try multiple possible field names for sport
+                sport = match_data.get('sport_name', match_data.get('sport', ''))
+                if not sport:
+                    # Try additional fields that might contain sport information
+                    sport = match_data.get('category_name', match_data.get('category', ''))
+                if not sport:
+                    # Try to determine sport from league or team names
+                    if any(s in home_team.lower() or s in away_team.lower() for s in ['fc', 'united', 'city', 'football']):
+                        sport = 'Soccer'
+                    elif any(s in home_team.lower() or s in away_team.lower() for s in ['basketball', 'bball']):
+                        sport = 'Basketball'
+                    else:
+                        sport = 'Other Sport'
                 # Extract match time if available
                 match_time = match_data.get('time', match_data.get('match_time', ''))
                 logger.info(f"Started tracking match: {home_team} vs {away_team}, Sport: {sport}, Initial score: {current_score['home']}-{current_score['away']} (Time: {match_time})")
@@ -824,7 +920,28 @@ class ScoreTracker:
             home_team = match.get('home_name', match.get('home', 'Home Team'))
             away_team = match.get('away_name', match.get('away', 'Away Team'))
             league = match.get('league_name', match.get('competition_name', 'Unknown League'))
-            sport = match.get('sport_name', match.get('sport', 'Unknown Sport'))
+            # Try multiple possible field names for sport
+            sport = match.get('sport_name', match.get('sport', ''))
+            if not sport:
+                # Try additional fields that might contain sport information
+                sport = match.get('category_name', match.get('category', ''))
+            if not sport:
+                # Check if we can determine sport from league name
+                league_lower = league.lower()
+                if any(s in league_lower for s in ['soccer', 'football', 'premier', 'la liga', 'bundesliga', 'serie a']):
+                    sport = 'Soccer'
+                elif any(s in league_lower for s in ['nba', 'basketball', 'ncaa']):
+                    sport = 'Basketball'
+                elif any(s in league_lower for s in ['nhl', 'hockey', 'ice']):
+                    sport = 'Hockey'
+                elif any(s in league_lower for s in ['tennis', 'atp', 'wta']):
+                    sport = 'Tennis'
+                elif any(s in league_lower for s in ['baseball', 'mlb']):
+                    sport = 'Baseball'
+                elif any(s in league_lower for s in ['nfl', 'american football']):
+                    sport = 'American Football'
+                else:
+                    sport = 'Other Sport'
             
             # Extract match time if available
             match_time = match.get('time', match.get('scheduled', 'Time unknown'))
@@ -1023,7 +1140,7 @@ class ScoreTracker:
                     'home': f"Team {match_id} (H)",
                     'away': f"Team {match_id} (A)",
                     'league': "Unknown League",
-                    'sport': "Unknown Sport"
+                    'sport': "Other Sport"
                 }
             
             # Calculate total score
@@ -1162,7 +1279,28 @@ class ScoreTracker:
             home_team = match.get('home_name', match.get('home', 'Home Team'))
             away_team = match.get('away_name', match.get('away', 'Away Team'))
             league = match.get('league_name', match.get('competition_name', 'Unknown League'))
-            sport = match.get('sport_name', match.get('sport', 'Unknown Sport'))
+            # Try multiple possible field names for sport
+            sport = match.get('sport_name', match.get('sport', ''))
+            if not sport:
+                # Try additional fields that might contain sport information
+                sport = match.get('category_name', match.get('category', ''))
+            if not sport:
+                # Check if we can determine sport from league name
+                league_lower = league.lower()
+                if any(s in league_lower for s in ['soccer', 'football', 'premier', 'la liga', 'bundesliga', 'serie a']):
+                    sport = 'Soccer'
+                elif any(s in league_lower for s in ['nba', 'basketball', 'ncaa']):
+                    sport = 'Basketball'
+                elif any(s in league_lower for s in ['nhl', 'hockey', 'ice']):
+                    sport = 'Hockey'
+                elif any(s in league_lower for s in ['tennis', 'atp', 'wta']):
+                    sport = 'Tennis'
+                elif any(s in league_lower for s in ['baseball', 'mlb']):
+                    sport = 'Baseball'
+                elif any(s in league_lower for s in ['nfl', 'american football']):
+                    sport = 'American Football'
+                else:
+                    sport = 'Other Sport'
             
             # Get current score
             current_score = self.extract_score(match)
