@@ -232,6 +232,28 @@ class Notifier:
             # Get team names with fallbacks
             home_team = match.get('home_name', match.get('home', 'Home Team'))
             away_team = match.get('away_name', match.get('away', 'Away Team'))
+            # Try multiple possible field names for league
+            league = match.get('league_name', '')
+            if not league:
+                # Try additional fields that might contain league information
+                league = match.get('competition_name', '')
+            if not league:
+                league = match.get('league', '')
+            if not league:
+                # Try to extract from event name or description if available
+                event_name = match.get('event_name', match.get('description', ''))
+                if event_name:
+                    # Extract league from event name if possible
+                    # Common patterns: "League Name: Team vs Team" or "Team vs Team - League Name"
+                    if ':' in event_name:
+                        league = event_name.split(':', 1)[0].strip()
+                    elif ' - ' in event_name:
+                        league = event_name.split(' - ', 1)[1].strip()
+            
+            # If still no league, use a default
+            if not league:
+                league = "Other Competition"
+                
             # Try multiple possible field names for sport
             sport = match.get('sport_name', match.get('sport', ''))
             if not sport:
@@ -254,27 +276,6 @@ class Notifier:
                     sport = 'American Football'
                 else:
                     sport = 'Other Sport'  # Better default than "Unknown Sport"
-            # Try multiple possible field names for league
-            league = match.get('league_name', '')
-            if not league:
-                # Try additional fields that might contain league information
-                league = match.get('competition_name', '')
-            if not league:
-                league = match.get('league', '')
-            if not league:
-                # Try to extract from event name or description if available
-                event_name = match.get('event_name', match.get('description', ''))
-                if event_name:
-                    # Extract league from event name if possible
-                    # Common patterns: "League Name: Team vs Team" or "Team vs Team - League Name"
-                    if ':' in event_name:
-                        league = event_name.split(':', 1)[0].strip()
-                    elif ' - ' in event_name:
-                        league = event_name.split(' - ', 1)[1].strip()
-            
-            # If still no league, use a default
-            if not league:
-                league = "Other Competition"
             
             # Create a compact tabulated format for notifications
             table_data = [
