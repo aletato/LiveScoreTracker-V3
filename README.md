@@ -12,6 +12,7 @@ This bot connects to the live-score-api service to monitor live sports matches a
 - **Flexible Match Filtering**: Track specific matches by team name, league, or match ID
 - **Real-time Notifications**: Get alerts when scores change
 - **Configurable Thresholds**: Set how many points need to be scored before receiving a notification
+- **Activity Status System**: Visual indicators for match activity (HOT, Ongoing, Cold)
 - **Timezone Conversion**: Automatically converts API times to your local timezone
 - **Resilient Error Handling**: Built-in retry logic for API failures
 - **Match Statistics**: View summaries of tracked matches and their scores
@@ -145,3 +146,15 @@ When the configured number of points are scored in a tracked match, the bot will
 
 1. Log the score change to the console and log file
 2. Display a desktop notification (if platform-specific packages are installed)
+
+## Activity Status System
+
+The bot includes a visual activity status system that helps you quickly identify match activity levels:
+
+- **H (Hot)**: Indicates a match that has had a recent score change. Matches remain "Hot" for 5 minutes after any score change.
+- **O (Ongoing)**: Indicates a match that is being tracked but hasn't had a recent score change.
+- **C (Cold)**: Indicates a match with no scoring activity (score is 0-0).
+
+This activity status is displayed in the "Activity" column of the live match status summary table that is printed to the console periodically. Matches are sorted by activity level, with "Hot" matches appearing at the top of the table for easy visibility.
+
+The activity status system helps you quickly identify which matches are most active and worth paying attention to, especially when tracking multiple matches simultaneously.

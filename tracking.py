@@ -586,6 +586,12 @@ class ScoreTracker:
         
         # Store last known scores for each match
         self.last_scores: Dict[str, Dict] = {}
+        
+        # Store timestamps of last score changes for activity indicators
+        self.score_change_times: Dict[str, float] = {}
+        
+        # How long a match stays "Hot" after scoring (in seconds)
+        self.hot_duration = 300  # 5 minutes - increased from 1 minute to ensure matches stay HOT longer
     
     def set_notifier(self, notifier):
         """Set the notifier instance"""
@@ -705,12 +711,29 @@ class ScoreTracker:
             
             # Check if score difference meets or exceeds threshold
             if score_diff >= self.config.notification_threshold:
+                # Record the time of this score change - ensure match_id is a string
+                match_id_str = str(match_id)
+                self.score_change_times[match_id_str] = time.time()
+                logger.info(f"SCORE CHANGE DETECTED for match {match_id_str}: {previous_score} -> {current_score}")
+                logger.info(f"Setting match {match_id_str} as HOT at {time.strftime('%H:%M:%S')}")
+                # Log the current score_change_times dictionary keys for debugging
+                logger.info(f"Current HOT matches: {list(self.score_change_times.keys())}")
+                
                 self.notifier.send_notification(
                     match_data, 
                     score_diff, 
                     previous_score, 
                     current_score
                 )
+            # Even if no notification threshold is met, record any score change for activity tracking
+            elif score_diff > 0:
+                # Record the time of this score change - ensure match_id is a string
+                match_id_str = str(match_id)
+                self.score_change_times[match_id_str] = time.time()
+                logger.info(f"Minor score change for match {match_id_str}: {previous_score} -> {current_score}")
+                logger.info(f"Setting match {match_id_str} as HOT at {time.strftime('%H:%M:%S')}")
+                # Log the current score_change_times dictionary keys for debugging
+                logger.info(f"Current HOT matches (minor change): {list(self.score_change_times.keys())}")
         else:
             # First time seeing this match, log it
             if self.config.debug_mode:
@@ -1225,13 +1248,26 @@ class ScoreTracker:
             # Create activity indicator based on recent score changes using ASCII alternatives
             activity = "O"  # Default - being tracked (O for Ongoing)
             
-            if has_notifications:
-                prev_total = self.last_scores[match_id]['home'] + self.last_scores[match_id]['away']
-                curr_total = current_score['home'] + current_score['away']
-                
-                if curr_total > prev_total:
+            # Log all match IDs for debugging
+            logger.info(f"Checking if match {match_id} is HOT. Current HOT matches: {list(self.score_change_times.keys())}")
+            
+            # Check if this match has had a recent score change - ensure match_id is a string
+            match_id_str = str(match_id)
+            if match_id_str in self.score_change_times:
+                # Check if the score change was recent (within hot_duration seconds)
+                time_since_change = time.time() - self.score_change_times[match_id_str]
+                if time_since_change < self.hot_duration:
                     activity = "H"  # Hot - recent scoring
-                elif curr_total == 0:
+                    logger.info(f"Match {match_id_str} is HOT! Score changed {time_since_change:.1f} seconds ago")
+                else:
+                    logger.info(f"Match {match_id_str} was HOT but cooled down. Last score change was {time_since_change:.1f} seconds ago (hot_duration is {self.hot_duration}s)")
+            else:
+                logger.info(f"Match {match_id_str} is not in score_change_times dictionary")
+            
+            # If no recent score change, check if score is 0-0
+            if activity == "O" and has_notifications:
+                curr_total = current_score['home'] + current_score['away']
+                if curr_total == 0:
                     activity = "C"  # Cold - no scoring yet
             
             # Add to table data
