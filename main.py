@@ -36,14 +36,30 @@ import concurrent.futures
 from tabulate import tabulate
 
 # Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.FileHandler("score_tracker.log"),
-        logging.StreamHandler()
-    ]
-)
+# Import io and sys for UTF-8 stream handling
+import io
+import sys
+
+# Configure console encoding for Windows
+if os.name == 'nt':
+    # Force UTF-8 encoding for stdout
+    sys.stdout.reconfigure(encoding='utf-8')
+    # Set console code page to UTF-8
+    os.system('chcp 65001 > nul')
+
+# Create handlers with UTF-8 encoding
+file_handler = logging.FileHandler("score_tracker.log", encoding='utf-8')
+
+# Create a StreamHandler that writes to stdout with UTF-8 encoding
+stream_handler = logging.StreamHandler(sys.stdout)
+
+# Configure formatter
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+file_handler.setFormatter(formatter)
+stream_handler.setFormatter(formatter)
+
+# Configure root logger
+logging.basicConfig(level=logging.INFO, handlers=[file_handler, stream_handler])
 logger = logging.getLogger("score_tracker")
 
 # Configuration
@@ -194,8 +210,18 @@ class Notifier:
                 # For Windows (requires win10toast package)
                 # pip install win10toast
                 from win10toast import ToastNotifier
+                
+                # Remove emojis or replace with safe alternatives for Windows notifications
+                # as Windows notifications may have issues with certain Unicode characters
+                safe_title = title.encode('ascii', 'replace').decode('ascii')
+                safe_message = message.encode('ascii', 'replace').decode('ascii')
+                
+                # Replace the Unicode replacement character with something more readable
+                safe_title = safe_title.replace('?', '!')
+                safe_message = safe_message.replace('?', '')
+                
                 toaster = ToastNotifier()
-                toaster.show_toast(title, message, duration=5)
+                toaster.show_toast(safe_title, safe_message, duration=5)
                 
             elif system == "Darwin":  # macOS
                 # For macOS (requires pync package)
