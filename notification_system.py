@@ -3,6 +3,7 @@ import platform
 import os
 from tabulate import tabulate
 from typing import Dict
+from timezone_utils import TimezoneConverter
 
 logger = logging.getLogger("score_tracker")
 
@@ -11,6 +12,9 @@ class Notifier:
     
     def __init__(self, config):
         self.config = config
+        # Initialize timezone converter
+        self.timezone_converter = TimezoneConverter()
+        logger.info(f"Notifier initialized with timezone: {self.timezone_converter.get_local_timezone_name()} ({self.timezone_converter.get_local_timezone_offset()})")
         
     def send_notification(self, match: Dict, score_diff: int, 
                          previous_score: Dict, current_score: Dict) -> None:
@@ -70,7 +74,20 @@ class Notifier:
                 sport = 'American Football'
             else:
                 sport = 'Other Sport'  # Better default than "Unknown Sport"
+        # Get match status and time
         match_status = match.get('status', 'In Progress')
+        match_time = match.get('time', match.get('match_time', ''))
+        
+        # Convert match time to local timezone if it's a time value
+        if match_time and match_time.lower() not in ["tbd", "?"] and not match_status.lower() in ["in play", "playing", "live"]:
+            match_time = self.timezone_converter.convert_time(match_time)
+            match_status = f"{match_status} ({match_time})"
+        # Add prime symbol for minutes if available
+        elif 'minute' in match:
+            match_status = f"{match_status} ({match.get('minute')}′)"
+        # Add prime symbol for minutes when match is in play, even if 'minute' field is not present
+        elif match_status.lower() in ["in play", "playing", "live"] and match_time:
+            match_status = f"{match_status} ({match_time}′)"
         
         # Create tabular data for the notification
         table_data = [
@@ -156,6 +173,23 @@ class Notifier:
                 else:
                     sport = 'Other Sport'  # Better default than "Unknown Sport"
             
+            # Get match time and status
+            match_time = match.get('time', match.get('match_time', ''))
+            match_status = match.get('status', 'In Progress')
+            
+            # Convert match time to local timezone if it's a time value
+            if match_time and match_time.lower() not in ["tbd", "?"] and not match_status.lower() in ["in play", "playing", "live"]:
+                match_time = self.timezone_converter.convert_time(match_time)
+                time_info = f" ({match_time})"
+            # Add prime symbol for minutes if available
+            elif 'minute' in match:
+                time_info = f" ({match.get('minute')}′)"
+            # Add prime symbol for minutes when match is in play, even if 'minute' field is not present
+            elif match_status.lower() in ["in play", "playing", "live"] and match_time:
+                time_info = f" ({match_time}′)"
+            else:
+                time_info = ""
+            
             # Create a compact tabulated format for notifications
             table_data = [
                 [f"{home_team}", f"{current_score['home']} ({previous_score['home']})"],
@@ -166,7 +200,7 @@ class Notifier:
             compact_score = tabulate(table_data, tablefmt="simple")
             
             title = f"⚠️ {sport}: {score_diff} points scored! ⚠️"
-            message = f"{league}\n{compact_score}"
+            message = f"{league}{time_info}\n{compact_score}"
             
             if system == "Windows":
                 # For Windows (requires win10toast package)

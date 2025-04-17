@@ -12,13 +12,14 @@ This bot connects to the live-score-api service to monitor live sports matches a
 - **Flexible Match Filtering**: Track specific matches by team name, league, or match ID
 - **Real-time Notifications**: Get alerts when scores change
 - **Configurable Thresholds**: Set how many points need to be scored before receiving a notification
+- **Timezone Conversion**: Automatically converts API times to your local timezone
 - **Resilient Error Handling**: Built-in retry logic for API failures
 - **Match Statistics**: View summaries of tracked matches and their scores
 - **Desktop Notifications**: Receive desktop notifications (platform-specific)
 
 ## Project Structure
 
-The project is organized into three main files, each with a specific responsibility:
+The project is organized into four main files, each with a specific responsibility:
 
 - **main.py**: The entry point of the application that handles configuration, setup, and the main execution flow.
 - **tracking.py**: Contains all the tracking-related functionality:
@@ -28,6 +29,8 @@ The project is organized into three main files, each with a specific responsibil
   - `ScoreTracker`: The main class that manages tracking score changes
 - **notification_system.py**: Contains the notification functionality:
   - `Notifier`: Handles sending notifications when score changes are detected
+- **timezone_utils.py**: Provides timezone detection and conversion functionality:
+  - `TimezoneConverter`: Detects the user's local timezone and converts API times
 
 This modular structure makes the codebase more maintainable and easier to extend.
 
@@ -37,6 +40,8 @@ This modular structure makes the codebase more maintainable and easier to extend
 - Required Python packages:
   - requests
   - tabulate
+  - pytz
+  - tzlocal
   - Platform-specific notification packages (optional):
     - Windows: win10toast
     - macOS: pync

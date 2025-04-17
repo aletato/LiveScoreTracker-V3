@@ -7,6 +7,7 @@ import concurrent.futures
 from tabulate import tabulate
 from typing import Dict, List, Any, Optional, Union, Set, Tuple
 from dataclasses import dataclass, field
+from timezone_utils import TimezoneConverter
 
 logger = logging.getLogger("score_tracker")
 
@@ -579,6 +580,10 @@ class ScoreTracker:
         self.running = False
         self.track_thread = None
         
+        # Initialize timezone converter
+        self.timezone_converter = TimezoneConverter()
+        logger.info(f"Initialized timezone converter with local timezone: {self.timezone_converter.get_local_timezone_name()} ({self.timezone_converter.get_local_timezone_offset()})")
+        
         # Store last known scores for each match
         self.last_scores: Dict[str, Dict] = {}
     
@@ -810,6 +815,13 @@ class ScoreTracker:
             # Extract match time if available
             match_time = match.get('time', match.get('scheduled', 'Time unknown'))
             match_date = match.get('date', 'Today')
+            
+            # Convert match time to local timezone
+            if match_time and match_time.lower() not in ["tbd", "?"]:
+                # Convert the time to local timezone
+                converted_date, converted_time = self.timezone_converter.convert_date_time(match_date, match_time)
+                match_date = converted_date
+                match_time = converted_time
             
             table_data.append([
                 i,
@@ -1193,10 +1205,17 @@ class ScoreTracker:
             status = match.get('status', 'Unknown')
             match_time = match.get('time', match.get('match_time', ''))
             
+            # Convert match time to local timezone if it's a time value
+            if match_time and match_time.lower() not in ["tbd", "?"] and not status.lower() in ["in play", "playing", "live"]:
+                match_time = self.timezone_converter.convert_time(match_time)
+            
             # Add additional status info based on match data
             status_info = status
             if 'minute' in match:
-                status_info = f"{status} ({match.get('minute')}′)"
+                status_info = f"{status} ({match.get('minute')}′)"  # Using prime symbol for minutes
+            elif status.lower() in ["in play", "playing", "live"] and match_time:
+                # Add prime symbol for minutes when match is in play, even if 'minute' field is not present
+                status_info = f"{status} ({match_time}′)"
             elif match_time:
                 status_info = f"{status} ({match_time})"
             
