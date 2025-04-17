@@ -1,2 +1,3 @@
 config.json
 score_tracker.log
+/__pycache__/*

@@ -1,24 +1,12 @@
+
 """
 Live Match Score Tracker Bot
 ----------------------------
 This bot tracks live matches from live-score-api and sends notifications
 when 2 or more points are scored in a match.
-
-Features:
-- Track specific matches by team name, league, or match ID
-- Real-time notifications for score changes
-- Configurable notification threshold
-- Resilient error handling and retry logic
-
-Requirements:
-- Python 3.9+
-- Requests library
-- A valid API key for live-score-api
-- Tabulate library for formatted output
-- win10toast (for Windows notifications)
-- pync (for macOS notifications)
-- notify2 (for Linux notifications)
+----------------------------
 """
+
 
 import os
 import sys
