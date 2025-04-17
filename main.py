@@ -1235,7 +1235,7 @@ class ScoreTracker:
             table_data.append([
                 match_id,
                 teams,
-                league,
+                match.get('league_name', match.get('league', 'Unknown League')),  # Use match data to get league
                 prev_score,
                 curr_score,
                 change
