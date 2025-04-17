@@ -698,6 +698,22 @@ class ScoreTracker:
         # Check if we should track this match
         if not self.match_filter.should_track_match(match_data):
             return
+        
+        # Check if match is finished
+        status = match_data.get('status', '').upper()
+        finished_statuses = ['FINISHED', 'FT', 'ENDED', 'COMPLETE', 'FINAL', 'FULL TIME']
+        
+        if any(finished_status in status for finished_status in finished_statuses):
+            # If match is finished, remove it from tracking
+            if match_id in self.last_scores:
+                logger.info(f"Removing FINISHED match {match_id} from tracking")
+                del self.last_scores[match_id]
+            
+            # Also remove from score change times if present
+            if match_id in self.score_change_times:
+                del self.score_change_times[match_id]
+                
+            return
             
         # Log filtering info if this is a new match
         self.match_filter.log_filtering_info(match_data)
@@ -1143,7 +1159,7 @@ class ScoreTracker:
         # Log the total number of matches received
         logger.info(f"Received {len(live_matches)} live matches for status summary")
         
-        # Filter matches to only those we're tracking
+        # Filter matches to only those we're tracking and not finished
         tracked_matches = []
         for match in live_matches:
             # Log match details for debugging
@@ -1151,15 +1167,23 @@ class ScoreTracker:
             home_team = match.get('home_name', match.get('home', 'Unknown'))
             away_team = match.get('away_name', match.get('away', 'Unknown'))
             
+            # Check if match is finished
+            status = match.get('status', '').upper()
+            finished_statuses = ['FINISHED', 'FT', 'ENDED', 'COMPLETE', 'FINAL', 'FULL TIME']
+            is_finished = any(finished_status in status for finished_status in finished_statuses)
+            
             # Check if we should track this match
-            should_track = self.match_filter.should_track_match(match)
+            should_track = self.match_filter.should_track_match(match) and not is_finished
             
             # Log the decision
             if should_track:
                 logger.info(f"Including match {match_id}: {home_team} vs {away_team} in status summary")
                 tracked_matches.append(match)
             elif self.config.debug_mode:
-                logger.info(f"Excluding match {match_id}: {home_team} vs {away_team} from status summary")
+                if is_finished:
+                    logger.info(f"Excluding FINISHED match {match_id}: {home_team} vs {away_team} from status summary")
+                else:
+                    logger.info(f"Excluding match {match_id}: {home_team} vs {away_team} from status summary")
         
         if not tracked_matches:
             logger.info("No tracked matches currently live.")
@@ -1248,8 +1272,9 @@ class ScoreTracker:
             # Create activity indicator based on recent score changes using ASCII alternatives
             activity = "O"  # Default - being tracked (O for Ongoing)
             
-            # Log all match IDs for debugging
-            logger.info(f"Checking if match {match_id} is HOT. Current HOT matches: {list(self.score_change_times.keys())}")
+            # Log all match IDs for debugging (only in debug mode)
+            if self.config.debug_mode:
+                logger.info(f"Checking if match {match_id} is HOT. Current HOT matches: {list(self.score_change_times.keys())}")
             
             # Check if this match has had a recent score change - ensure match_id is a string
             match_id_str = str(match_id)
@@ -1258,11 +1283,14 @@ class ScoreTracker:
                 time_since_change = time.time() - self.score_change_times[match_id_str]
                 if time_since_change < self.hot_duration:
                     activity = "H"  # Hot - recent scoring
-                    logger.info(f"Match {match_id_str} is HOT! Score changed {time_since_change:.1f} seconds ago")
+                    if self.config.debug_mode:
+                        logger.info(f"Match {match_id_str} is HOT! Score changed {time_since_change:.1f} seconds ago")
                 else:
-                    logger.info(f"Match {match_id_str} was HOT but cooled down. Last score change was {time_since_change:.1f} seconds ago (hot_duration is {self.hot_duration}s)")
+                    if self.config.debug_mode:
+                        logger.info(f"Match {match_id_str} was HOT but cooled down. Last score change was {time_since_change:.1f} seconds ago (hot_duration is {self.hot_duration}s)")
             else:
-                logger.info(f"Match {match_id_str} is not in score_change_times dictionary")
+                if self.config.debug_mode:
+                    logger.info(f"Match {match_id_str} is not in score_change_times dictionary")
             
             # If no recent score change, check if score is 0-0
             if activity == "O" and has_notifications:
@@ -1281,23 +1309,53 @@ class ScoreTracker:
                 activity
             ])
         
-        # Sort by activity level (active matches first)
-        def activity_sort_key(row):
-            activity = row[6]
-            if activity == "H":  # Hot - recent scoring
-                return 0  # Active matches first
-            elif activity == "O":  # Ongoing - being tracked
-                return 1  # Tracked matches next
-            else:  # Cold - no scoring yet
-                return 2  # Cold matches last
+        # Sort by match status according to specified order:
+        # 1. NOT STARTED
+        # 2. Half Time Break
+        # 3. IN PLAY
+        # 4. Added time
+        def status_sort_key(row):
+            status = row[5].lower()  # Status is in column 5
+            
+            # Define priority order
+            if "not started" in status:
+                return 0  # First priority
+            elif "half time" in status or "ht" in status or "break" in status:
+                return 1  # Second priority
+            elif "in play" in status or "playing" in status or "live" in status:
+                return 2  # Third priority
+            elif "added time" in status or "injury time" in status or "+" in status:
+                return 3  # Fourth priority
+            else:
+                return 4  # Any other status
         
-        status_data.sort(key=activity_sort_key)
+        status_data.sort(key=status_sort_key)
         
         # Create headers with ASCII alternatives instead of emoji for better compatibility
         headers = ["ID", "Teams", "Sport", "League", "Score", "Status", "Activity"]
         
-        # Create and display the table
-        table = tabulate(status_data, headers=headers, tablefmt="grid")
+        # Create and display the table with a slight visual difference for hot matches
+        # First, separate hot matches from the rest
+        regular_matches = [row for row in status_data if row[6] != "H"]
+        hot_matches = [row for row in status_data if row[6] == "H"]
+        
+        # Create tables for each group
+        if regular_matches:
+            regular_table = tabulate(regular_matches, headers=headers, tablefmt="grid")
+        else:
+            regular_table = "No regular matches currently being tracked."
+            
+        if hot_matches:
+            # Add a visual indicator to hot match rows
+            for match in hot_matches:
+                # Add a visual indicator to the team name
+                match[1] = f"🔥 {match[1]}"
+            hot_table = tabulate(hot_matches, headers=headers, tablefmt="grid")
+        else:
+            hot_table = "No hot matches currently."
+        
+        # Combine the tables with a separator
+        table = regular_table + "\n\n" + hot_table
         
         logger.info("\n===== LIVE MATCH STATUS SUMMARY =====")
         logger.info(f"Tracking {len(status_data)} live matches:")
