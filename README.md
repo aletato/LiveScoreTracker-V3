@@ -1,69 +1,83 @@
-# Live Match Score Tracker Bot
+# 🏆 LiveScoreTracker V4
 
-A Python bot that tracks live sports matches and sends notifications when scores change.
+A powerful Python application that tracks live sports matches and delivers real-time score notifications.
 
-## Overview
+![Python Version](https://img.shields.io/badge/python-3.9%2B-blue)
+![License](https://img.shields.io/badge/license-MIT-green)
 
-This bot connects to the live-score-api service to monitor live sports matches and sends notifications when a configurable number of points are scored in a match. It's perfect for sports enthusiasts who want to stay updated on score changes without constantly checking scores manually.
+## 📋 Overview
 
-## Features
+LiveScoreTracker V4 connects to the live-score-api service to monitor sports matches in real-time. It automatically sends notifications when scores change, allowing sports enthusiasts to stay updated without constantly checking scores manually.
 
-- **Multi-sport Support**: Track matches across various sports including basketball, soccer, tennis, and more
-- **Flexible Match Filtering**: Track specific matches by team name, league, or match ID
-- **Real-time Notifications**: Get alerts when scores change
-- **Configurable Thresholds**: Set how many points need to be scored before receiving a notification
-- **Activity Status System**: Visual indicators for match activity (HOT, Ongoing, Cold)
-- **Timezone Conversion**: Automatically converts API times to your local timezone
-- **Resilient Error Handling**: Built-in retry logic for API failures
-- **Match Statistics**: View summaries of tracked matches and their scores
-- **Desktop Notifications**: Receive desktop notifications (platform-specific)
+## ✨ Key Features
 
-## Project Structure
+- **🏀 Multi-sport Support**: Track matches across basketball, soccer, tennis, and more
+- **🔍 Smart Match Filtering**: Focus on specific teams, leagues, or match IDs
+- **⚡ Real-time Notifications**: Receive instant alerts when scores change
+- **🎚️ Configurable Thresholds**: Customize how many points trigger a notification
+- **🔥 Activity Status System**: Visual indicators show match activity (HOT, Ongoing, Cold)
+- **🕒 Timezone Intelligence**: Automatic conversion to your local timezone
+- **🛡️ Resilient Operation**: Built-in retry logic handles API failures gracefully
+- **📊 Match Statistics**: View comprehensive summaries of tracked matches
+- **💻 Desktop Notifications**: Platform-specific alerts keep you informed
 
-The project is organized into four main files, each with a specific responsibility:
+## 🏗️ Architecture
 
-- **main.py**: The entry point of the application that handles configuration, setup, and the main execution flow.
-- **tracking.py**: Contains all the tracking-related functionality:
-  - `ScoreCache`: For caching match data to reduce API calls
-  - `LiveScoreAPI`: Handles all interactions with the live-score-api service
-  - `MatchFilter`: Filters matches based on user configuration
-  - `ScoreTracker`: The main class that manages tracking score changes
-- **notification_system.py**: Contains the notification functionality:
-  - `Notifier`: Handles sending notifications when score changes are detected
-- **timezone_utils.py**: Provides timezone detection and conversion functionality:
-  - `TimezoneConverter`: Detects the user's local timezone and converts API times
+The project follows a modular design with four core components:
 
-This modular structure makes the codebase more maintainable and easier to extend.
+| File | Purpose |
+|------|---------|
+| **main.py** | Entry point handling configuration, setup, and execution flow |
+| **tracking.py** | Core tracking functionality with `ScoreCache`, `LiveScoreAPI`, `MatchFilter`, and `ScoreTracker` |
+| **notification_system.py** | Notification handling through the `Notifier` class |
+| **timezone_utils.py** | Timezone detection and conversion via `TimezoneConverter` |
 
-## Requirements
+This modular approach enhances maintainability and extensibility.
 
-- Python 3.9 or higher
-- Required Python packages:
+## 📋 Requirements
+
+- Python 3.9+
+- Required packages:
   - requests
   - tabulate
   - pytz
   - tzlocal
-  - Platform-specific notification packages (optional):
-    - Windows: win10toast
-    - macOS: pync
-    - Linux: notify2
-- A valid API key for live-score-api.com
+- Platform-specific notification packages (optional):
+  - Windows: win10toast
+  - macOS: pync
+  - Linux: notify2
+- Valid API credentials from live-score-api.com
 
-## Installation
+## 🚀 Getting Started
 
-1. Clone this repository or download the source code
-2. Install the required dependencies using the provided requirements.txt file:
+### Installation
+
+1. Clone this repository:
+   ```bash
+   git clone https://github.com/yourusername/LiveScoreTracker.git
+   cd LiveScoreTracker
    ```
+
+2. Install dependencies:
+   ```bash
    pip install -r requirements.txt
    ```
-3. (Optional) Uncomment and install the appropriate platform-specific notification package in requirements.txt:
-   - Windows: win10toast
-   - macOS: pync
-   - Linux: notify2
 
-## Configuration
+3. (Optional) Install platform-specific notification package:
+   ```bash
+   # Windows
+   pip install win10toast
+   
+   # macOS
+   pip install pync
+   
+   # Linux
+   pip install notify2
+   ```
 
-Create a `config.json` file in the same directory as the bot with the following structure:
+### Configuration
+
+Create a `config.json` file with your settings:
 
 ```json
 {
@@ -90,71 +104,81 @@ Create a `config.json` file in the same directory as the bot with the following 
 
 | Option | Description | Type | Default |
 |--------|-------------|------|---------|
-| `api_key` | Your API key from live-score-api.com | String | Required |
-| `api_secret` | Your API secret from live-score-api.com | String | Required |
-| `notification_threshold` | Number of points scored before notification | Integer | 2 |
-| `polling_interval` | Time between API checks (seconds) | Float | 10.0 |
-| `sports` | List of sports to track (null for all sports) | Array or null | null |
-| `max_concurrent_requests` | Maximum number of concurrent API requests | Integer | 5 |
-| `max_retries` | Maximum number of retries for failed requests | Integer | 3 |
+| `api_key` | Your API key | String | Required |
+| `api_secret` | Your API secret | String | Required |
+| `notification_threshold` | Points before notification | Integer | 2 |
+| `polling_interval` | Time between checks (seconds) | Float | 10.0 |
+| `sports` | Sports to track | Array | null (all) |
+| `max_concurrent_requests` | Max concurrent API requests | Integer | 5 |
+| `max_retries` | Max retries for failed requests | Integer | 3 |
 | `retry_delay` | Delay between retries (seconds) | Float | 2.0 |
 | `cache_expiry` | Cache expiry time (seconds) | Integer | 60 |
-| `track_all_matches` | Whether to track all matches | Boolean | true |
-| `tracked_teams` | Teams to track (if not tracking all) | Array | [] |
-| `tracked_leagues` | Leagues to track (if not tracking all) | Array | [] |
-| `tracked_match_ids` | Specific match IDs to track | Array | [] |
-| `exclude_teams` | Teams to exclude from tracking | Array | [] |
-| `exclude_leagues` | Leagues to exclude from tracking | Array | [] |
+| `track_all_matches` | Track all matches flag | Boolean | true |
+| `tracked_teams` | Teams to track | Array | [] |
+| `tracked_leagues` | Leagues to track | Array | [] |
+| `tracked_match_ids` | Match IDs to track | Array | [] |
+| `exclude_teams` | Teams to exclude | Array | [] |
+| `exclude_leagues` | Leagues to exclude | Array | [] |
 | `debug_mode` | Enable detailed logging | Boolean | false |
 
-## Usage
+## 🎮 Usage
 
-Run the bot with:
+Run the application:
 
-```
+```bash
 python main.py
 ```
 
-On first run, the bot will guide you through the configuration process if no `config.json` file exists.
-
-### Interactive Configuration
-
-The bot provides an interactive configuration process that will help you set up:
-
-1. API credentials
-2. Notification options
-3. Sports to track
-4. Match filtering options
+On first run, the interactive setup will guide you through configuration if no `config.json` exists.
 
 ### Tracking Options
 
-You can configure the bot to:
+Configure the tracker to:
+- Monitor all matches for selected sports
+- Focus on specific teams, leagues, or match IDs
+- Exclude certain teams or leagues
 
-- Track all matches for selected sports
-- Track only specific teams, leagues, or match IDs
-- Exclude specific teams or leagues from tracking
+## 📝 Logging
 
-## Logging
-
-The bot logs all activity to:
+Activity is logged to:
 - Console output
-- A `score_tracker.log` file
+- `score_tracker.log` file
 
-## Notifications
+## 🔔 Notification System
 
-When the configured number of points are scored in a tracked match, the bot will:
+When the configured threshold of points is scored, the system:
+1. Logs the score change
+2. Displays a desktop notification (if supported)
 
-1. Log the score change to the console and log file
-2. Display a desktop notification (if platform-specific packages are installed)
+## 🔥 Activity Status System V2
 
-## Activity Status System
+The enhanced activity status system provides visual indicators:
 
-The bot includes a visual activity status system that helps you quickly identify match activity levels:
+- **H (Hot)**: Recent score change (within last 5 minutes)
+- **O (Ongoing)**: Active match without recent score changes
+- **C (Cold)**: Match with no scoring activity (0-0)
 
-- **H (Hot)**: Indicates a match that has had a recent score change. Matches remain "Hot" for 5 minutes after any score change.
-- **O (Ongoing)**: Indicates a match that is being tracked but hasn't had a recent score change.
-- **C (Cold)**: Indicates a match with no scoring activity (score is 0-0).
+### Match Status Sorting
 
-This activity status is displayed in the "Activity" column of the live match status summary table that is printed to the console periodically. Matches are sorted by activity level, with "Hot" matches appearing at the top of the table for easy visibility.
+Matches are sorted by game state in this priority:
+1. **NOT STARTED** (upcoming matches)
+2. **Half Time Break**
+3. **IN PLAY** (active matches)
+4. **Added Time** (injury/extra time)
+5. Other statuses
 
-The activity status system helps you quickly identify which matches are most active and worth paying attention to, especially when tracking multiple matches simultaneously.
+### Debug Mode
+
+When enabled, debug mode provides detailed information about:
+- Match HOT status checks
+- Current HOT matches list
+- Timing of status changes
+- Match cooldown events
+
+## 📜 License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## 🤝 Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
